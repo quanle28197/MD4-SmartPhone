@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous"></head>
+    <script type="text/javascript">
+        function getContent(data, i) {
+            return `<tr>
+                <td>${i + 1}</td>
+                <td>${data[i].producer}</td>
+                <td>${data[i].model}</td>
+                <td>${data[i].price}</td>
+                <td><button onclick="removeSmartphone(${data[i].id})">Delete</button></td>
+                <td><button type="button" onclick="updateSmartphoneForm(${data[i].id})" data-bs-toggle="modal" data-bs-target="#myModal">Update</button></td>
+            </tr>`;
+        }
+
+        function updateSmartphoneForm(id) {
+            let content = `<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="updateSmartphone(${id})">Update</button> `;
+            document.getElementById('showEdit').innerHTML = content;
+            $.ajax({
+                type:"GET",
+                url:`/smartphones/${id}`,
+                success:function (smartphone){
+                    $(`#producer`).val(smartphone.producer)
+                    $(`#model`).val(smartphone.model)
+                    $(`#price`).val(smartphone.price)
+                }
+            })
+
+        }
+
+        function updateSmartphone(id) {
+            let producer = $(`#producer`).val();
+            let model = $(`#model`).val();
+            let price = $(`#price`).val();
+            let smartPhone = {
+                producer: producer,
+                model: model,
+                price: price
+            };
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "PUT",
+                data: JSON.stringify(smartPhone),
+                url: `http://localhost:8080/smartphones/${id}`,
+                success: getAll
+
+            })
+        }
+
+        function removeSmartphone(id) {
+            $.ajax({
+                type: "DELETE",
+                url: `http://localhost:8080/smartphones/${id}`,
+                success: getAll
+            });
+        }
+
+        function getAll() {
+            $.ajax({
+                type: "GET",
+                url: "/smartphones",
+                success: function (data) {
+                    let content = "";
+                    for (let i = 0; i < data.length; i++) {
+                        content += getContent(data, i)
+                    }
+                    $("#smartphone").html(content);
+                }
+            });
+        }
+
+        function addNewForm() {
+            document.getElementById("add-smartphone").innerHTML = `<table>
+        <tr>
+            <td>Producer:</td>
+            <td><input type="text" id="producer" placeholder="producer"></td>
+        </tr>
+        <tr>
+            <td>Model:</td>
+            <td><input type="text" id="model" placeholder="model"></td>
+        </tr>
+        <tr>
+            <td>Price:</td>
+            <td><input type="text" id="price" placeholder="price"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="button" value="Add" onclick="addNew()"></td>
+        </tr>
+    </table>`
+        }
+
+        function addNew() {
+            let producer = $('#producer').val();
+            let model = $('#model').val();
+            let price = $('#price').val();
+            let newSmartphone = {
+                producer: producer,
+                model: model,
+                price: price
+            };
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "POST",
+                data: JSON.stringify(newSmartphone),
+                //tên API
+                url: "/smartphones",
+                success: getAll
+
+            });
+            event.preventDefault();
+        }
+    </script>
+</head>
+<body onload="getAll()">
+<button onclick="addNewForm()">Create</button>
+<form id="add-smartphone">
+</form>
+<div class="modal" id="myModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Modal Heading</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form >
+                <!-- Modal body -->
+                <div class="modal-body">
+
+                    <div>
+                        <label>Producer:</label>
+                        <input type="text" id="producer">
+                    </div>
+                    <div>
+                        <label>Model:</label>
+                        <input type="text" id="model">
+                    </div>
+                    <div>
+                        <label>Price:</label>
+                        <input type="text" id="price">
+                    </div>
+                </div>
+
+                <!-- Modal footer -->
+                <div class="modal-footer" id="showEdit">
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<table>
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Producer</th>
+        <th>Model</th>
+        <th>Price</th>
+        <th></th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody id="smartphone">
+    </tbody>
+</table>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+</html>
